@@ -32,5 +32,63 @@ std::string * run()
 {
     return new std::string("");
 }
+
+long long int GetHighestProduct(Array* nums, int count)
+{
+	long long int product = 1;
+	long long int hiproduct = 0;
+	int z_cnt = 0;
+
+	for (int i = 0; i < count; i++)
+	{
+		int digit = nums->data[i];
+		if (digit == 0)
+		{
+			z_cnt++;
+		}
+		else
+		{
+			product = product * digit;
+		}
+	}
+	
+	if (z_cnt == 0)
+	{
+		hiproduct = product;
+	}
+
+
+	for (size_t i = count; i < nums->len; i++)
+	{
+		int digit_to_add = nums->data[i];
+		int digit_to_remove= nums->data[i - count];
+
+		if (digit_to_remove == 0)
+		{
+			z_cnt--;
+		}
+		else
+		{
+			product = product / digit_to_remove;
+		}
+
+		if (digit_to_add == 0)
+		{
+			z_cnt++;
+		}
+		else
+		{
+			product = product * digit_to_add;
+		}
+
+		if (z_cnt == 0 && product > hiproduct)
+		{
+			hiproduct = product;
+		}
+
+	}
+
+	return hiproduct;
+}
     
 #endif // ALGO_H_

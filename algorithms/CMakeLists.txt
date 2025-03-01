@@ -28,6 +28,7 @@ enable_testing()
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
+
 add_executable(
   algorithms_test
   test/algorithms_test.cpp
@@ -40,3 +41,6 @@ target_link_libraries(
 
 include(GoogleTest)
 gtest_discover_tests(algorithms_test)
+
+
+

@@ -26,4 +26,17 @@ Array *init(size_t len, int * input) {
     return array;
 }
 
+
+Array* DigitStringToIntArray(const std::string& digits)
+{
+	size_t _len = digits.length();
+	int* _data = (int*)safe_alloc(_len, sizeof(int));
+	for (size_t i = 0; i < _len; i++)
+	{
+		_data[i] = digits[i] - '0';
+	}
+
+	return init(_len, _data);
+}
+
 #endif  // TYPES_H_
