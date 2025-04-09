@@ -9,7 +9,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.box = "generic/ubuntu2204"
 
-  config.vm.synced_folder ".", "/home/vagrant/code", type: "nfs", nfs_udp: false
+  config.vm.synced_folder ".", "/home/vagrant/code"
 
 
   config.vm.provision "shell", inline: <<-shell

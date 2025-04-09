@@ -1,5 +1,5 @@
 # CPP2 Assignments
-![Build](https://github.com/kstatz12/cpp_two_assignments/actions/workflows/cmake_build.yml/badge.svg)
+![Build](https://github.com/kstatz12/cpp_two_assignments/actions/workflows/build.yml/badge.svg)
 
 ## Visual Studio
 if you want to use a full featured IDE like visual studio or CLion make sure you have the CMake tools installed
