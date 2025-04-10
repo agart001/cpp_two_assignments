@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include "../include/types.hpp"
 #include "../include/algo.hpp"
+#include <string>
+#include <algorithm>
 
 // Demonstrate some basic assertions.
 TEST(THOUSAND_DIGIT_TEST, BasicAssertions) {

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.30)
+cmake_minimum_required(VERSION 3.22.1)
 project(Library)
 
 # Set C++ Standard
@@ -25,6 +25,13 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 enable_testing()
+
+include_directories(${CMAKE_SOURCE_DIR}/include)
+
+add_executable(
+  library
+  src/main.cpp
+)
 
 add_executable(
   library_test

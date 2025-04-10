@@ -28,16 +28,16 @@
             "dependsOn": ["CMake Build (Parent + Children)"]
         },
         {
-            "label": "Run ChildProject1",
+            "label": "Run Algorithms",
             "type": "shell",
-            "command": "${workspaceFolder}/build/ChildProject1",
+            "command": "${workspaceFolder}/build/algorithms",
             "group": "test",
             "problemMatcher": []
         },
         {
-            "label": "Run ChildProject2",
+            "label": "Run Library",
             "type": "shell",
-            "command": "${workspaceFolder}/build/ChildProject2",
+            "command": "${workspaceFolder}/build/library",
             "group": "test",
             "problemMatcher": []
         },
