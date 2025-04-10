@@ -2,6 +2,7 @@
 #include "../include/LibTypes.h"
 #include "../include/json.hpp"
 
+
 // ISBN Tests
 TEST(ISBNTests, DefaultConstructor)
 {
@@ -288,24 +289,344 @@ TEST(UserTests, DefaultConstructor)
   EXPECT_EQ(user.books.size(), 0);
 }
 
-TEST(UserTests, ConstructorWithNameAndPassword)
+sha256_type UserPasswordHash(const std::string& password)
 {
   hash_sha256 hash;
   hash.sha256_init();
+  auto bytes = std::stobya(password);
+  hash.sha256_update(bytes.data(), bytes.size());
+  return hash.sha256_final();
+}
 
+User ExampleUser(std::string name, std::string pass)
+{
+  sha256_type password = UserPasswordHash(pass);
+  User user = User(name, password);
+
+  return user;
+}
+
+TEST(UserTests, ConstructorWithNameAndPassword)
+{
   std::string name = "Example User";
-  std::string pass = "ExamplePassword";
-
-  auto bytes = std::stobya(pass);
-	hash.sha256_init();
-	hash.sha256_update(bytes.data(), bytes.size());
-	sha256_type password = hash.sha256_final();
-
-	User user = User(name, password);
+  sha256_type password = UserPasswordHash("ExamplePassword");
+	User user = ExampleUser("Example User", "ExamplePassword");
 
   EXPECT_EQ(user.name, name);
   EXPECT_EQ(user.password, password);
   EXPECT_EQ(user.books.size(), 0);
   EXPECT_EQ(user.password.size(), 32);
   EXPECT_FALSE(user.isNULL());
+}
+
+TEST(UserTests, ConstructorWithNameAndPasswordAndBooks)
+{
+  std::string name = "Example User";
+  sha256_type password = UserPasswordHash("ExamplePassword");
+  std::vector<LibraryTypes::Book> books = {
+    LibraryTypes::Book("Title1", "Author1", "978-3-16-148410-0"),
+    LibraryTypes::Book("Title2", "Author2", "978-3-16-148410-0")
+  };
+
+
+  User user = User(name, password, books);
+  EXPECT_EQ(user.name, name);
+  EXPECT_EQ(user.password, password);
+  EXPECT_EQ(user.books.size(), 2);
+  EXPECT_EQ(user.books[0].title, "Title1");
+  EXPECT_EQ(user.books[1].title, "Title2");
+  EXPECT_EQ(user.password.size(), 32);
+  EXPECT_FALSE(user.isNULL());
+}
+
+TEST(UserTests, EqualsEqualsOperator)
+{
+  User user1 = ExampleUser("Example User", "ExamplePassword");
+  User user2 = ExampleUser("Example User", "ExamplePassword");
+
+  EXPECT_TRUE(user1 == user2);
+}
+
+TEST(UserTests, NotEqualsOperator)
+{
+  User user1 = ExampleUser("Example User", "ExamplePassword");
+  User user2 = ExampleUser("Another User", "AnotherPassword");
+
+  EXPECT_FALSE(user1 == user2);
+}
+
+TEST(UserTests, ToJsonString)
+{
+  User user = ExampleUser("Example User", "pass");
+  nlohmann::json j = user;
+
+  std::string expected = R"({"books":[],"name":"Example User","password":[156,67,169,96,230,45,62,132,110,0,41,190,46,123,34,112,67,249,22,173,198,141,17,83,69,17,9,34,58,204,63,195]})";
+  EXPECT_EQ(j.dump(), expected);
+}
+
+TEST(UserTests, UserVectorToJsonString)
+{
+  std::vector<User> users = {
+    ExampleUser("Example User", "pass")
+  };
+
+  nlohmann::json j = users;
+
+  std::string expected = R"([{"books":[],"name":"Example User","password":[156,67,169,96,230,45,62,132,110,0,41,190,46,123,34,112,67,249,22,173,198,141,17,83,69,17,9,34,58,204,63,195]}])";
+
+  EXPECT_EQ(j.dump(), expected);
+}
+
+TEST(UserTests, FromJsonString)
+{
+  std::string json = R"({"books":[],"name":"Example User","password":[156,67,169,96,230,45,62,132,110,0,41,190,46,123,34,112,67,249,22,173,198,141,17,83,69,17,9,34,58,204,63,195]})";
+
+  nlohmann::json j = nlohmann::json::parse(json);
+  EXPECT_TRUE(j.is_object());
+
+  User user = j.get<User>();
+  EXPECT_EQ(user.name, "Example User");
+  EXPECT_EQ(user.password.size(), 32);
+  EXPECT_EQ(user.books.size(), 0);
+  EXPECT_FALSE(user.isNULL());
+}
+
+TEST(UserTests, UserVectorFromJsonString)
+{
+  std::string json = R"([{"books":[],"name":"Example User","password":[156,67,169,96,230,45,62,132,110,0,41,190,46,123,34,112,67,249,22,173,198,141,17,83,69,17,9,34,58,204,63,195]}])";
+  nlohmann::json j = nlohmann::json::parse(json);
+  EXPECT_TRUE(j.is_array());
+
+  std::vector<User> users = j.get<std::vector<User>>();
+
+  EXPECT_EQ(users.size(), 1);
+  EXPECT_EQ(users[0].name, "Example User");
+  EXPECT_EQ(users[0].password.size(), 32);
+  EXPECT_EQ(users[0].books.size(), 0);
+  EXPECT_FALSE(users[0].isNULL());
+}
+
+// UserManager Tests
+
+TEST(UMTests, DefaultConstructor)
+{
+  UserManager um;
+  EXPECT_EQ(um.size(), 0);
+}
+
+TEST(UMTests, AddUser)
+{
+  UI::TEST_MODE = true;
+  UserManager um;
+  User user = ExampleUser("Example User", "ExamplePassword");
+
+  um.add(user);
+  EXPECT_EQ(um.size(), 1);
+  EXPECT_EQ(um.at(0).name, "Example User");
+}
+
+TEST(UMTests, RemoveUser)
+{
+  UI::TEST_MODE = true;
+  UserManager um;
+  User user = ExampleUser("Example User", "ExamplePassword");
+
+  um.add(user);
+  EXPECT_EQ(um.size(), 1);
+  um.remove(user);
+  EXPECT_EQ(um.size(), 0);
+}
+
+TEST(UMTests, SigninUser)
+{
+  UI::TEST_MODE = true;
+  UserManager um;
+  User user = ExampleUser("User", "pass");
+
+  um.add(user);
+  EXPECT_EQ(um.size(), 1);
+  EXPECT_EQ(um.at(0).name, "User");
+
+  std::istringstream input("User\npass\n");
+  std::streambuf* origCin = std::cin.rdbuf();
+  std::cin.rdbuf(input.rdbuf());
+
+  std::ostringstream out;
+  std::streambuf* origCout = std::cout.rdbuf();
+  std::cout.rdbuf(out.rdbuf());
+
+  um.signin();
+
+  EXPECT_EQ(um.current_user.name, "User");
+  EXPECT_EQ(um.current_user.password, user.password);
+  EXPECT_EQ(um.current_user.books.size(), 0);
+
+  std::cin.rdbuf(origCin);
+  std::cout.rdbuf(origCout);
+}
+
+TEST(UMTests, SignupUser)
+{
+  UI::TEST_MODE = true;
+  UserManager um;
+  std::istringstream input("User\npass\n");
+  std::streambuf* origCin = std::cin.rdbuf();
+  std::cin.rdbuf(input.rdbuf());
+
+  std::ostringstream out;
+  std::streambuf* origCout = std::cout.rdbuf();
+  std::cout.rdbuf(out.rdbuf());
+
+  um.signup();
+
+  EXPECT_EQ(um.size(), 1);
+  EXPECT_EQ(um.at(0).name, "User");
+  EXPECT_EQ(um.at(0).password.size(), 32);
+  EXPECT_EQ(um.at(0).books.size(), 0);
+
+  std::cin.rdbuf(origCin);
+  std::cout.rdbuf(origCout);
+}
+
+TEST(UMTests, LoginToSignin)
+{
+  UI::TEST_MODE = true;
+  UserManager um;
+  User user = ExampleUser("User", "pass");
+
+  std::ostringstream out;
+  std::streambuf* origCout = std::cout.rdbuf();
+  std::cout.rdbuf(out.rdbuf());
+
+  um.add(user);
+  EXPECT_EQ(um.size(), 1);
+  EXPECT_EQ(um.at(0).name, "User");
+
+  std::istringstream input("1\nUser\npass\n");
+  std::streambuf* origCin = std::cin.rdbuf();
+  std::cin.rdbuf(input.rdbuf());
+
+  um.login();
+
+  EXPECT_EQ(um.current_user.name, "User");
+  EXPECT_EQ(um.current_user.password, user.password);
+  EXPECT_EQ(um.current_user.books.size(), 0);
+
+  std::cin.rdbuf(origCin);
+  std::cout.rdbuf(origCout);
+} 
+
+TEST(UMTests, LoginToSignup)
+{
+  UI::TEST_MODE = true;
+  UserManager um;
+  EXPECT_EQ(um.size(), 0);
+
+  std::istringstream input("2\nUser\npass\n");
+  std::streambuf* origCin = std::cin.rdbuf();
+  std::cin.rdbuf(input.rdbuf());
+
+  std::ostringstream out;
+  std::streambuf* origCout = std::cout.rdbuf();
+  std::cout.rdbuf(out.rdbuf());
+
+  um.login();
+
+  EXPECT_EQ(um.size(), 1);
+  EXPECT_EQ(um.at(0).name, "User");
+  EXPECT_EQ(um.at(0).password.size(), 32);
+  EXPECT_EQ(um.at(0).books.size(), 0);
+  EXPECT_EQ(um.current_user.name, "User");
+
+  std::cin.rdbuf(origCin);
+  std::cout.rdbuf(origCout);
+}
+
+TEST(UMTests, CurrentUserAddBook)
+{
+  UI::TEST_MODE = true;
+  UserManager um;
+  User user = ExampleUser("User", "pass");
+
+  um.add(user);
+  EXPECT_EQ(um.size(), 1);
+  EXPECT_EQ(um.at(0).name, "User");
+
+  LibraryTypes::Book book("Title1", "Author1", "978-3-16-148410-0");
+  um.current_user = user;
+  um.add(book);
+
+  EXPECT_EQ(um.current_user.books.size(), 1);
+  EXPECT_EQ(um.current_user.books[0].title, "Title1");
+}
+
+TEST(UMTests, CurrentUserRemoveBook)
+{
+  UI::TEST_MODE = true;
+  UserManager um;
+  User user = ExampleUser("User", "pass");
+
+  um.add(user);
+  EXPECT_EQ(um.size(), 1);
+  EXPECT_EQ(um.at(0).name, "User");
+
+  LibraryTypes::Book book("Title1", "Author1", "978-3-16-148410-0");
+  um.current_user = user;
+  um.add(book);
+
+  EXPECT_EQ(um.current_user.books.size(), 1);
+  EXPECT_EQ(um.current_user.books[0].title, "Title1");
+
+  um.remove(0);
+  EXPECT_EQ(um.current_user.books.size(), 0);
+}
+
+#include "../include/App.h"
+
+// LibraryApp Tests
+TEST(LibraryAppTests, AppLoginToSignup)
+{
+  UI::TEST_MODE = true;
+  LibraryApp app;
+
+  std::istringstream input("2\nUser\npass\n3\n");
+  std::streambuf* origCin = std::cin.rdbuf();
+  std::cin.rdbuf(input.rdbuf());
+
+  std::ostringstream out;
+  std::streambuf* origCout = std::cout.rdbuf();
+  std::cout.rdbuf(out.rdbuf());
+
+  app.start();
+
+  EXPECT_EQ(app.size(true), 1);
+
+  std::cin.rdbuf(origCin);
+  std::cout.rdbuf(origCout);
+}
+
+TEST(LibraryAppTests, AppLoginToSignin)
+{
+  UI::TEST_MODE = true;
+  User user = ExampleUser("User","pass");
+  UserManager um;
+  um.add(user);
+  LibraryTypes::Library lib;
+
+  LibraryApp app = LibraryApp(um,lib);
+
+  std::istringstream input("1\nUser\npass\n3\n");
+  std::streambuf* origCin = std::cin.rdbuf();
+  std::cin.rdbuf(input.rdbuf());
+
+  std::ostringstream out;
+  std::streambuf* origCout = std::cout.rdbuf();
+  std::cout.rdbuf(out.rdbuf());
+
+  app.start();
+
+  EXPECT_EQ(app.current_user(), user);
+
+  std::cin.rdbuf(origCin);
+  std::cout.rdbuf(origCout);
 }

@@ -10,6 +10,7 @@
 
 namespace UI
 {
+	static inline bool TEST_MODE = false; ///< Flag to allow or disallow console clearing.
 	/// Visual divider used in printed console messages.
 	static const std::string DIVIDER = "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
 
@@ -36,6 +37,15 @@ namespace UI
 		/// String
 		S
 	};
+
+	static inline void CLEAR()
+	{
+		if(TEST_MODE) 
+		{
+			return;
+		}
+		[[maybe_unused]] int ignored1 = std::system("clear");	
+	}
 
 	/// Basic question structure for console interaction.
 	struct Question
@@ -98,7 +108,7 @@ namespace UI
 			while (!validated)
 			{
 				std::cout << "INPUT: ";
-				std::cin >> input;
+				std::getline(std::cin, input);
 
 				switch (type)
 				{
@@ -110,7 +120,7 @@ namespace UI
 
 				if (!validated)
 				{
-					[[maybe_unused]] int ignored = std::system("clear");
+					CLEAR();
 					print_message(question);
 					std::string invalid_message = "INVALID INPUT: " + input + " TYPE: " + IT_ENUM_STRING[type];
 					print_message(invalid_message);

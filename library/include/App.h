@@ -34,21 +34,30 @@ private:
 	LibraryTypes::Library LIB;
 
 public:
+	LibraryApp() = default;
+
+	LibraryApp(const UserManager& um, LibraryTypes::Library lib) 
+        : UM(um), LIB(std::move(lib)) { }
+
+	~LibraryApp() = default;
 
 	/// @brief Handles the App's start.
 	/// Prompts the user to login and 
 	/// the transitions to the App's main.
 	void start()
 	{
-		[[maybe_unused]] bool ignored;
-		ignored = this->UM.load();
-		ignored = this->LIB.load();
+		if(!UI::TEST_MODE)
+		{
+			[[maybe_unused]] bool ignored;
+			ignored = this->UM.load();
+			ignored = this->LIB.load();
+		}
 
-		bool check = UM.current_user.isNULL();
+		bool check = this->UM.current_user.isNULL();
 		if (check)
 		{
 			//login the user
-			UM.login();
+			this->UM.login();
 		}
 
 		//Shift to the app main once the user is logged in
@@ -60,7 +69,7 @@ public:
 	/// and Library's menus 
 	void main()
 	{
-		[[maybe_unused]] int ignored = std::system("clear");
+		UI::CLEAR();
 
 		//@brief Standards UI Action Question Layout
 		//This is the standard layout of UI actions with the Library App
@@ -103,6 +112,11 @@ public:
 	/// content's as files then exits the console.
 	void exit()
 	{
+		if(!UI::TEST_MODE)
+		{
+			return;
+		}
+
 		this->UM.save();
 		this->LIB.save();
 		std::exit(0);
@@ -119,11 +133,31 @@ public:
 		   << UI::DIVIDER << "\n";
 		return ss.str();
 	}
+	
+	size_t size(bool is_um_size)
+	{
+		size_t res;
+		if(is_um_size)
+		{
+			res = this->UM.size();
+		}
+		else
+		{
+			res = this->LIB.size();
+		}
+		
+		return res;
+	}
+
+	const User& current_user()
+	{
+		return this->UM.current_user;
+	}
 
 	/// @brief Prints a vector of books to the console.
 	void print_books(std::vector<LibraryTypes::Book> books)
 	{
-		[[maybe_unused]] int ignored = std::system("clear");
+		UI::CLEAR();
 
 		if (books.empty())
 		{
@@ -170,7 +204,7 @@ public:
 	/// - Exit & Save
 	void um_main_menu()
 	{
-		[[maybe_unused]] int ignored = std::system("clear");
+		UI::CLEAR();
 
 		UI::ActionQuestion question;
         std::stringstream ss;
@@ -250,7 +284,7 @@ public:
 			// Function
 			[this](const std::string&)
 			{
-				[[maybe_unused]] int ignored = std::system("clear");
+				UI::CLEAR();
                 
                 std::stringstream message;
                 message << header()
@@ -259,7 +293,7 @@ public:
 				UI::Console::print_message(message.str());
 				User added = this->UM.input_user();
 
-				ignored = std::system("clear");
+				UI::CLEAR();
 
                 message.str("");
                 message << header()
@@ -282,7 +316,7 @@ public:
 			// Function
 			[this](const std::string&)
 			{
-				[[maybe_unused]] int ignored = std::system("clear");
+				UI::CLEAR();
 				this->print_users();
 
 				UI::Question question;
@@ -308,7 +342,7 @@ public:
 
 				this->UM.remove(removed);
 
-				ignored = std::system("clear");
+				UI::CLEAR();
 
                 std::stringstream message;
                 message << header()
@@ -321,7 +355,7 @@ public:
 			} 
 		};
 
-		[[maybe_unused]] int ignored = std::system("clear");
+		UI::CLEAR();
 
 		UI::ActionQuestion question;
         std::stringstream ss;
@@ -356,7 +390,7 @@ public:
 	/// - Exit & Save
 	void lib_main_menu()
 	{
-		[[maybe_unused]] int ignored = std::system("clear");
+		UI::CLEAR();
 
 		UI::ActionQuestion question;
         std::stringstream ss;
@@ -470,7 +504,7 @@ public:
 			}
 		};
 	
-		[[maybe_unused]] int ignored = std::system("clear");
+		UI::CLEAR();
 
 		UI::ActionQuestion question;
         std::stringstream ss;
@@ -515,7 +549,7 @@ public:
 			// Function
 			[this](const std::string&)
 			{
-				[[maybe_unused]] int ignored = std::system("clear");
+				UI::CLEAR();
 
 				std::string title;
 
@@ -542,7 +576,7 @@ public:
 			// Function
 			[this](const std::string&)
 			{
-				[[maybe_unused]] int ignored = std::system("clear");
+				UI::CLEAR();
 
 				std::string author;
 
@@ -568,7 +602,7 @@ public:
 			// Function
 			[this](const std::string&)
 			{
-				[[maybe_unused]] int ignored = std::system("clear");
+				UI::CLEAR();
 
 				std::string isbn;
 
@@ -584,7 +618,7 @@ public:
 			} 
 		};
 
-		[[maybe_unused]] int ignored = std::system("clear");
+		UI::CLEAR();
 
 		UI::ActionQuestion question;
         std::stringstream ss;
@@ -624,7 +658,7 @@ public:
 			// Function
 			[this](const std::string&)
 			{
-				[[maybe_unused]] int ignored = std::system("clear");
+				UI::CLEAR();
 
 				std::string name, author, isbn;
                 
@@ -646,11 +680,20 @@ public:
 				std::cout << "ISBN: ";
 				std::getline(std::cin, isbn);
 
+				try{
+					[[maybe_unused]] LibraryTypes::ISBN verify = LibraryTypes::ISBN(isbn);
+				}
+				catch (const std::exception& e)
+				{
+					this->lib_add_rem_menu();
+					return;
+				}
+
 				LibraryTypes::Book book = LibraryTypes::Book(name, author, isbn);
 
 				this->LIB.add(book);
 
-				ignored = std::system("clear");
+				UI::CLEAR();
 
                 message.str("");
                 message << header()
@@ -703,7 +746,7 @@ public:
 
 				this->LIB.remove(removed);
 
-				[[maybe_unused]] int ignored = std::system("clear");
+				UI::CLEAR();
 
                 message.str("");
                 message << header()
@@ -716,7 +759,7 @@ public:
 			} 
 		};
 
-		[[maybe_unused]] int ignored = std::system("clear");
+		UI::CLEAR();
 
 		UI::ActionQuestion question;
         std::stringstream ss;
@@ -787,7 +830,7 @@ public:
 
 				this->UM.add(checkout);
 
-				[[maybe_unused]] int ignored = std::system("clear");
+				UI::CLEAR();
 
                 message.str("");
                 message << header()
@@ -837,7 +880,7 @@ public:
 
 				this->LIB.add(checkin);
 
-				[[maybe_unused]] int ignored = std::system("clear");
+				UI::CLEAR();
 
                 message.str("");
                 message << header()
@@ -850,7 +893,7 @@ public:
 			} 
 		};
 
-		[[maybe_unused]] int ignored = std::system("clear");
+		UI::CLEAR();
 
 		UI::ActionQuestion question;
         std::stringstream ss;

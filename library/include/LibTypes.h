@@ -347,7 +347,7 @@ namespace LibraryTypes
 			author_indexes[toLC(book.author)].push_back(index);
 			isbn_indexes[book.isbn.code] = index;
 
-			//save();
+			save();
 		}
 
 		/// @brief Removes a book by ISBN.
@@ -367,7 +367,7 @@ namespace LibraryTypes
 
 			re_index();
 
-			//save();
+			save();
 
 			return true;
 		}
@@ -406,6 +406,7 @@ namespace LibraryTypes
 		/// @brief Saves all books to a JSON file.
 		void save()
 		{
+			//std::cout << "Saving books to:" << std::filesystem::current_path() / "data" / "library_books.json" << std::endl;
 			std::filesystem::path books_path = std::filesystem::current_path() / "data" / "library_books.json";
 
 
@@ -425,9 +426,18 @@ namespace LibraryTypes
 		/// @returns True if loaded, false otherwise.
 		bool load() 
         {
-            std::filesystem::path books_path = std::filesystem::current_path() / "data" / "library_books.json";
+            std::filesystem::path data_path = std::filesystem::current_path() / "data";
+			std::filesystem::path books_path = data_path / "library_books.json";
 
-			if (!std::filesystem::exists(books_path)) {
+			if (!std::filesystem::exists(data_path)) {
+				std::filesystem::create_directory(data_path);
+			}
+
+			if (!std::filesystem::exists(books_path)) 
+			{
+				std::ofstream o(books_path);
+				o << "[]" << std::endl; 
+				o.close();
 				return false;
 			}
 

@@ -26,6 +26,9 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
+find_package(GTest REQUIRED)
+include_directories(${GTEST_INCLUDE_DIRS})
+
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 

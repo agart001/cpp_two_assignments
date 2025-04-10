@@ -171,6 +171,14 @@ public:
 	/// Loads all users from disk and re-indexes them.
 	UserManager() { }
 
+	UserManager(const UserManager &other)
+		: users(other.users),
+		  current_user(other.current_user)
+	{
+		// Rebuild the users_map with our new users vector
+		re_index();
+	}
+
 	~UserManager() { }
 
 	/// @brief Prompts the user to sign in.
@@ -180,16 +188,16 @@ public:
 		std::string name;
 		std::string pass;
 
-		[[maybe_unused]] int ignored = std::system("clear");
+		UI::CLEAR();
 		std::ostringstream oss;
 		oss << "CPPII | Assignment 2 | Library: #\n" << UI::DIVIDER << "\nSign In\nPlease enter your name & password";
 		std::string f_contents = oss.str();
 		UI::Console::print_message(f_contents);
 
 		std::cout << "Name: ";
-		std::cin >> name;
+		std::getline(std::cin, name);
 		std::cout << "Password: ";
-		std::cin >> pass;
+		std::getline(std::cin, pass);
 
 		auto bytes = std::stobya(pass);
 		hash.sha256_init();
@@ -215,13 +223,15 @@ public:
 	/// @brief Prompts the user to sign up by creating a new user.
 	void signup()
 	{
-		[[maybe_unused]] int ignored = std::system("clear");
+		UI::CLEAR();
 		std::ostringstream oss;
 		oss << "CPPII | Assignment 2 | Library: #\n" << UI::DIVIDER << "\nSign Up\nPlease enter your name & password";
 		std::string f_contents = oss.str();
 		UI::Console::print_message(f_contents);
 
-		User u = input_user();
+		User user = input_user();
+
+		current_user = user;
 	}
 
 	/// @brief Prompts input for creating a new user.
@@ -233,9 +243,9 @@ public:
 		std::string pass;
 
 		std::cout << "Name: ";
-		std::cin >> name;
+		std::getline(std::cin, name);
 		std::cout << "Password: ";
-		std::cin >> pass;
+		std::getline(std::cin, pass);
 
 		auto bytes = std::stobya(pass);
 		hash.sha256_init();
@@ -270,7 +280,7 @@ public:
 
 		if (!res.first) 
 		{
-			std::cout << "Unknown command.\n";
+			login();
 		}
 	}
 
@@ -336,6 +346,7 @@ public:
 	/// @brief Saves all users to a JSON file on disk.
 	void save()
 	{
+		//std::cout << "Saving users to:" << std::filesystem::current_path() / "data" / "library_users.json" << std::endl;
 		std::filesystem::path users_path = std::filesystem::current_path() / "data" / "library_users.json";
 
 		nlohmann::json users_j = users;
@@ -348,22 +359,45 @@ public:
 	/// @returns True if successful, false otherwise.
 	bool load()
 	{
-		std::filesystem::path users_path = std::filesystem::current_path() / "data" / "library_users.json";
-
+		std::filesystem::path data_path = std::filesystem::current_path() / "data";
+		std::filesystem::path users_path = data_path / "library_users.json";
+	
+		// Create the 'data' folder if it does not exist
+		if (!std::filesystem::exists(data_path)) 
+		{
+			std::filesystem::create_directory(data_path);
+		}
+	
+		// Create the 'library_users.json' file if it does not exist
 		if (!std::filesystem::exists(users_path)) 
 		{
+			std::ofstream o(users_path);
+			o << "[]" << std::endl; 
+			o.close();
 			return false;
 		}
-
+	
+		// Load the file if it exists
 		std::ifstream i(users_path);
 		if (!i.is_open()) 
 		{
 			return false;
 		}
-
+	
 		nlohmann::json j;
 		i >> j;
 		i.close();
+	
+		users = j;
+	
+		re_index();
+	
+		return true;
+	}
+
+	bool load(std::string json)
+	{
+		nlohmann::json j = nlohmann::json::parse(json);
 
 		users = j;
 
@@ -371,7 +405,6 @@ public:
 
 		return true;
 	}
-
 };
 
 
