@@ -125,7 +125,7 @@ namespace LibraryTypes
 		/// @param The string code to be verified & assigned.
 		ISBN(std::string code) {
 			if (verify_format13(code) == 0) {
-				throw new std::runtime_error("Invalid ISBN code");
+				throw std::runtime_error("Invalid ISBN code");
 			}
 
 			this->code = code;
@@ -332,14 +332,7 @@ namespace LibraryTypes
 
 		/// Default Library constructor.
 		/// Loads saved books from disk.
-		Library() 
-        {
-			if (!load()) 
-            {
-				return;
-			}
-			re_index();
-		}
+		Library() { }
 
 		~Library() { }
 
@@ -422,6 +415,12 @@ namespace LibraryTypes
 			o.close();
 		}
 
+		std::string save_as_json()
+		{
+			nlohmann::json books_j = books;
+			return books_j.dump();
+		}
+
 		/// @brief Loads books from a JSON file.
 		/// @returns True if loaded, false otherwise.
 		bool load() 
@@ -443,9 +442,19 @@ namespace LibraryTypes
 
 			books = j;
 
+			re_index();
 			return true;
 		}
 
+		bool load(std::string json)
+		{
+			nlohmann::json j = nlohmann::json::parse(json);
+
+			books = j;
+
+			re_index();
+			return true;
+		}
 	};
 
 }

@@ -40,7 +40,10 @@ public:
 	/// the transitions to the App's main.
 	void start()
 	{
-		// Make sure the user is null
+		[[maybe_unused]] bool ignored;
+		ignored = this->UM.load();
+		ignored = this->LIB.load();
+
 		bool check = UM.current_user.isNULL();
 		if (check)
 		{

@@ -12,13 +12,13 @@
 #include "UI.h"
 
 namespace std {
-	std::array<std::uint8_t, 20U> stobya(const std::string& str)
+	std::array<std::uint8_t, 32U> stobya(const std::string& str)
 	{
-		std::array<std::uint8_t, 20U> arr{};
+		std::array<std::uint8_t, 32U> arr{};
 
-		if (str.length() > 20)
+		if (str.length() > 32)
 		{
-			std::cerr << "std::string length greater than 20: " << str << std::endl;
+			std::cerr << "std::string length greater than 32: " << str << std::endl;
 			return arr;
 		}
 
@@ -169,14 +169,7 @@ public:
 
 	/// Default constructor.
 	/// Loads all users from disk and re-indexes them.
-	UserManager()
-	{
-		if (!load()) 
-		{
-			return;
-		}
-		re_index();
-	}
+	UserManager() { }
 
 	~UserManager() { }
 
@@ -373,6 +366,8 @@ public:
 		i.close();
 
 		users = j;
+
+		re_index();
 
 		return true;
 	}
