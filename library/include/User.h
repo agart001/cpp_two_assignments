@@ -216,7 +216,8 @@ public:
 
 		if (!user_found) 
 		{
-			signin();
+			UI::CLEAR();
+			login();
 		}
 	}
 
@@ -280,6 +281,7 @@ public:
 
 		if (!res.first) 
 		{
+			UI::CLEAR();
 			login();
 		}
 	}
@@ -292,6 +294,11 @@ public:
 		size_t index = users.size() - 1;
 		users_map[user] = index;
 
+		if(UI::TEST_MODE)
+		{
+			return;
+		}
+
 		save();
 	}
 
@@ -302,6 +309,11 @@ public:
 		size_t index = users_map[user];
 		users.erase(users.begin() + index);
 		re_index();
+
+		if(UI::TEST_MODE)
+		{
+			return;
+		}
 
 		save();
 	}
@@ -346,6 +358,11 @@ public:
 	/// @brief Saves all users to a JSON file on disk.
 	void save()
 	{
+		if(UI::TEST_MODE)
+		{
+			return;
+		}
+
 		//std::cout << "Saving users to:" << std::filesystem::current_path() / "data" / "library_users.json" << std::endl;
 		std::filesystem::path users_path = std::filesystem::current_path() / "data" / "library_users.json";
 
@@ -359,6 +376,12 @@ public:
 	/// @returns True if successful, false otherwise.
 	bool load()
 	{
+		
+		if(UI::TEST_MODE)
+		{
+			return false;
+		}
+
 		std::filesystem::path data_path = std::filesystem::current_path() / "data";
 		std::filesystem::path users_path = data_path / "library_users.json";
 	

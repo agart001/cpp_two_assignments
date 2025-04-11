@@ -586,8 +586,8 @@ TEST(UMTests, CurrentUserRemoveBook)
 // LibraryApp Tests
 TEST(LibraryAppTests, AppLoginToSignup)
 {
-  UI::TEST_MODE = true;
   LibraryApp app;
+  UI::TEST_MODE = true;
 
   std::istringstream input("2\nUser\npass\n3\n");
   std::streambuf* origCin = std::cin.rdbuf();
@@ -630,3 +630,124 @@ TEST(LibraryAppTests, AppLoginToSignin)
   std::cin.rdbuf(origCin);
   std::cout.rdbuf(origCout);
 }
+
+TEST(LibraryAppTests, SearchBookByTitle)
+{
+  UI::TEST_MODE = true;
+
+  LibraryTypes::Library lib;
+  LibraryTypes::Book book("Title", "Author", "978-3-16-148410-0");
+  lib.add(book);
+
+  UserManager um;
+  User user = ExampleUser("User", "pass");
+  um.add(user);
+  LibraryApp app(um, lib);
+  EXPECT_EQ(app.size(false), 1);
+  EXPECT_EQ(app.size(true), 1);
+
+  // 1 - Signin
+  // User 
+  // pass
+  // 2 - Library Main Menu
+  // 1 - Inventory
+  // 2 - Search
+  // 1 - Title
+  // Test Title
+  // 3 - Exit
+  std::istringstream input("1\nUser\npass\n2\n1\n2\n1\nTitle\n3\n");
+  std::streambuf *origCin = std::cin.rdbuf();
+  std::cin.rdbuf(input.rdbuf());
+
+  std::ostringstream out;
+  std::streambuf *origCout = std::cout.rdbuf();
+  std::cout.rdbuf(out.rdbuf());
+
+  app.start();
+
+  EXPECT_FALSE(app.search_res().empty());
+  EXPECT_EQ(app.search_res()[0].title, "Title");
+
+  std::cin.rdbuf(origCin);
+  std::cout.rdbuf(origCout);
+}
+
+/*TEST(LibraryAppTests, SearchBookByAuthor)
+{
+  UI::TEST_MODE = true;
+
+  LibraryTypes::Library lib;
+  LibraryTypes::Book book("Title", "Author", "978-3-16-148410-0");
+  lib.add(book);
+
+  UserManager um;
+  User user = ExampleUser("User", "pass");
+  um.add(user);
+  um.current_user = user;
+  LibraryApp app(um, lib);
+
+  // 1 - Signin
+  // User 
+  // pass
+  // 2 - Library Main Menu
+  // 1 - Inventory
+  // 2 - Search
+  // 2 - Author
+  // Test Author
+  // 3 - Exit
+  std::istringstream input("1\nUser\npass\n2\n1\n2\n2\nAuthor\n3\n");
+  std::streambuf *origCin = std::cin.rdbuf();
+  std::cin.rdbuf(input.rdbuf());
+
+  std::ostringstream out;
+  std::streambuf *origCout = std::cout.rdbuf();
+  std::cout.rdbuf(out.rdbuf());
+
+  app.start();
+
+  EXPECT_FALSE(app.search_res().empty());
+  EXPECT_EQ(app.search_res()[0].author, "Author");
+
+  std::cin.rdbuf(origCin);
+  std::cout.rdbuf(origCout);
+}*/
+
+/*TEST(LibraryAppTests, SearchBookByISBN)
+{
+  UI::TEST_MODE = true;
+
+  LibraryTypes::Library lib;
+  LibraryTypes::Book book("Test Title", "Test Author", "978-3-16-148410-0");
+  lib.add(book);
+
+  UserManager um;
+  User user = ExampleUser("User", "pass");
+  um.add(user);
+  um.current_user = user;
+  LibraryApp app(um, lib);
+
+  // 1 - Signin
+  // User 
+  // pass
+  // 2 - Library Main Menu
+  // 1 - Inventory
+  // 2 - Search
+  // 3 - ISBN
+  // 978-3-16-148410-0
+  // 3 - Exit
+  std::istringstream input("1\nUser\npass\n2\n1\n2\n3\n978-3-16-148410-0\n3\n");
+  std::streambuf *origCin = std::cin.rdbuf();
+  std::cin.rdbuf(input.rdbuf());
+
+  std::ostringstream out;
+  std::streambuf *origCout = std::cout.rdbuf();
+  std::cout.rdbuf(out.rdbuf());
+
+  app.start();
+
+  EXPECT_FALSE(app.search_res().empty());
+  EXPECT_EQ(app.search_res()[0].isbn.code, "978-3-16-148410-0");
+
+  std::cin.rdbuf(origCin);
+  std::cout.rdbuf(origCout);
+}*/

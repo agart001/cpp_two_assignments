@@ -10,7 +10,7 @@
 
 namespace UI
 {
-	static inline bool TEST_MODE = false; ///< Flag to allow or disallow console clearing.
+	inline bool TEST_MODE = false; ///< Flag to allow or disallow console clearing.
 	/// Visual divider used in printed console messages.
 	static const std::string DIVIDER = "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
 

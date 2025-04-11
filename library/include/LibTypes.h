@@ -11,6 +11,8 @@
 #include <vector>
 #include <filesystem>
 
+#include "UI.h"
+
 namespace LibraryTypes
 {
 	/// Library Search Types
@@ -406,6 +408,11 @@ namespace LibraryTypes
 		/// @brief Saves all books to a JSON file.
 		void save()
 		{
+			if(UI::TEST_MODE)
+			{
+				return;
+			}
+
 			//std::cout << "Saving books to:" << std::filesystem::current_path() / "data" / "library_books.json" << std::endl;
 			std::filesystem::path books_path = std::filesystem::current_path() / "data" / "library_books.json";
 
@@ -426,6 +433,12 @@ namespace LibraryTypes
 		/// @returns True if loaded, false otherwise.
 		bool load() 
         {
+			
+			if(UI::TEST_MODE)
+			{
+				return false;
+			}
+
             std::filesystem::path data_path = std::filesystem::current_path() / "data";
 			std::filesystem::path books_path = data_path / "library_books.json";
 

@@ -46,6 +46,7 @@ public:
 	/// the transitions to the App's main.
 	void start()
 	{
+		
 		if(!UI::TEST_MODE)
 		{
 			[[maybe_unused]] bool ignored;
@@ -112,7 +113,7 @@ public:
 	/// content's as files then exits the console.
 	void exit()
 	{
-		if(!UI::TEST_MODE)
+		if(UI::TEST_MODE)
 		{
 			return;
 		}
@@ -152,6 +153,11 @@ public:
 	const User& current_user()
 	{
 		return this->UM.current_user;
+	}
+
+	std::vector<LibraryTypes::Book>& search_res()
+	{
+		return this->LIB.search_res;
 	}
 
 	/// @brief Prints a vector of books to the console.
@@ -555,13 +561,12 @@ public:
 
 				UI::Console::print_message("Enter the title of your book");
 
-				std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 				std::cout << "NAME: ";
 				std::getline(std::cin, title);
 
 				this->LIB.search_res = this->LIB.search(title, LibraryTypes::SEARCH::TITLE);
 
-
+				UI::Console::print_message("Searching for: " + title);
 				this->print_books(this->LIB.search_res);
 			} 
 		};
@@ -582,12 +587,13 @@ public:
 
 				UI::Console::print_message("Enter the author of your book");
 
-				std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+				
 				std::cout << "AUTHOR: ";
 				std::getline(std::cin, author);
 
 				this->LIB.search_res = this->LIB.search(author, LibraryTypes::SEARCH::AUTHOR);
 
+				UI::Console::print_message("Searching for: " + author);
 				this->print_books(this->LIB.search_res);
 			} 
 		};
@@ -608,12 +614,13 @@ public:
 
 				UI::Console::print_message("Enter the ISBN of your book");
 
-				std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+				
 				std::cout << "ISBN: ";
 				std::getline(std::cin, isbn);
 
 				this->LIB.search_res = this->LIB.search(isbn, LibraryTypes::SEARCH::CODE);
 
+				UI::Console::print_message("Searching for: " + isbn);
 				this->print_books(this->LIB.search_res);
 			} 
 		};
@@ -669,7 +676,7 @@ public:
                         << "enter 'new' and one will be generated";
                 UI::Console::print_message(message.str());
 
-				std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+				
 
 				std::cout << "Name: ";
 				std::getline(std::cin, name);
